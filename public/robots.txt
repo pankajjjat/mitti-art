@@ -1,0 +1,5 @@
+# robots.txt for Mitti
+User-agent: *
+Allow: /
+
+Sitemap: https://mitti.craft/sitemap.xml

@@ -1,26 +1,154 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ─── MITTI BRAND THEME ─── Tailwind v4 @theme block */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fonts */
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Colors — Earth Palette */
+  --color-earth-50: #f5f0eb;
+  --color-earth-100: #ede5dc;
+  --color-earth-200: #e8e2d9;
+  --color-earth-300: #d4cdc1;
+  --color-earth-400: #a8988a;
+  --color-earth-500: #9c8f83;
+  --color-earth-600: #7a6b5e;
+  --color-earth-700: #5c4e42;
+  --color-earth-800: #2c1810;
+  --color-earth-900: #1a0e09;
+
+  /* Primary — Deep Indigo */
+  --color-indigo-50: #eef3f9;
+  --color-indigo-100: #d4e0ef;
+  --color-indigo-200: #aec5e0;
+  --color-indigo-300: #7da7ce;
+  --color-indigo-400: #5b8fb9;
+  --color-indigo-500: #3a74a0;
+  --color-indigo-600: #2a5a82;
+  --color-indigo-700: #1f4a6d;
+  --color-indigo-800: #1a3c5e;
+  --color-indigo-900: #0f2942;
+
+  /* Tertiary — Terracotta Accent */
+  --color-terra-50: #fdf4f0;
+  --color-terra-100: #f9e4da;
+  --color-terra-200: #f3cebe;
+  --color-terra-300: #ebaf97;
+  --color-terra-400: #e18a6b;
+  --color-terra-500: #d46a49;
+  --color-terra-600: #c75b39;
+  --color-terra-700: #a3482b;
+  --color-terra-800: #873c26;
+  --color-terra-900: #703520;
+
+  /* Highlight — Warm Gold */
+  --color-gold-50: #fcf7eb;
+  --color-gold-100: #f7ecc9;
+  --color-gold-200: #f0db95;
+  --color-gold-300: #e8c96a;
+  --color-gold-400: #e0b94a;
+  --color-gold-500: #d4a04a;
+  --color-gold-600: #b8843a;
+  --color-gold-700: #996a2f;
+  --color-gold-800: #7e562a;
+  --color-gold-900: #694725;
+
+  /* Success */
+  --color-success: #2d8a4e;
+  --color-error: #c94b4b;
+  --color-info: #5b8fb9;
+
+  /* Aliases for the brand */
+  --color-page: #f5f0eb;
+  --color-surface: #ffffff;
+  --color-border: #e8e2d9;
+  --color-text: #2c1810;
+  --color-text-muted: #9c8f83;
+  --color-primary: #1a3c5e;
+  --color-accent: #c75b39;
+  --color-highlight: #d4a04a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── BASE STYLES ─── */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-page);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── UTILITIES ─── */
+@utility container-page {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  @media (width >= 768px) {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  @media (width >= 1024px) {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+/* ─── CUSTOM SCROLLBAR ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-page);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-earth-300);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-earth-400);
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+@utility animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+@utility animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+@utility animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out forwards;
+}
+
+/* ─── SELECTION ─── */
+::selection {
+  background-color: var(--color-terra-200);
+  color: var(--color-terra-900);
 }

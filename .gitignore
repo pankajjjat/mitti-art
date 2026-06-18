@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# pocketbase
+/pocketbase/pb_data/
+/pocketbase/pocketbase.zip
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
