@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const WHATSAPP_NUMBER = "+919876543210"; // Replace with actual number
+const WHATSAPP_NUMBER = "+918770858280";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=Hi%20Mitti%20Art!`;
 const EMAIL = "hello@mittiart.com";
 const INSTAGRAM_USERNAME = "saumya.chaurasia04";

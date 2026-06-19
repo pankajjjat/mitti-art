@@ -563,7 +563,7 @@ function ProductCard({
             e.stopPropagation();
             toggleWishlist(product.id);
           }}
-          className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-text-muted opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:text-accent group-hover:opacity-100"
+          className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-text-muted opacity-0 max-md:opacity-100 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:text-accent group-hover:opacity-100"
           aria-label={
             isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"
           }

@@ -22,9 +22,9 @@ const categories = [
 
 const supportLinks = [
   { label: "Contact Us", href: "/contact", icon: Mail },
-  { label: "FAQ", href: "/faq", icon: HelpCircle },
-  { label: "Shipping Info", href: "/shipping", icon: Truck },
-  { label: "Returns & Exchanges", href: "/returns", icon: RotateCcw },
+  { label: "FAQ", href: "/contact", icon: HelpCircle },
+  { label: "Shipping Info", href: "/contact", icon: Truck },
+  { label: "Returns & Exchanges", href: "/contact", icon: RotateCcw },
 ];
 
 const socialLinks = [
@@ -214,19 +214,13 @@ export default function Footer() {
 
           <div className="flex items-center gap-4">
             <Link
-              href="/privacy"
+              href="/contact"
               className="font-sans text-xs text-white/40 transition-colors hover:text-white/60"
             >
-              Privacy Policy
+              Contact Us
             </Link>
             <Link
-              href="/terms"
-              className="font-sans text-xs text-white/40 transition-colors hover:text-white/60"
-            >
-              Terms of Service
-            </Link>
-            <Link
-              href="/shipping"
+              href="/contact"
               className="font-sans text-xs text-white/40 transition-colors hover:text-white/60"
             >
               Shipping Policy

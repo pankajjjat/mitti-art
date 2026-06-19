@@ -36,7 +36,7 @@ export default function Hero() {
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:gap-4">
-          <Button variant="primary" size="lg" href="#explore">
+          <Button variant="primary" size="lg" href="#featured">
             Explore the Collection
           </Button>
           <Button

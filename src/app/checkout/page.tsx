@@ -75,11 +75,10 @@ export default function CheckoutPage() {
     }
   }, [isAuthenticated, items, orderResult, router]);
 
-  if (!isAuthenticated) return null;
-  if (items.length === 0 && !orderResult) return null;
-
   // ─── Handlers ───
 
+  // NOTE: useCallbacks must be defined BEFORE any early returns
+  // to maintain React hook order on every render.
   const updateAddress = useCallback(
     (field: keyof Address, value: string) => {
       setAddress((prev) => ({ ...prev, [field]: value }));
@@ -190,6 +189,10 @@ export default function CheckoutPage() {
     notes,
     clearCart,
   ]);
+
+  // ─── Early returns — safe here (all hooks above) ───
+  if (!isAuthenticated) return null;
+  if (items.length === 0 && !orderResult) return null;
 
   // ─── Confirmation View ───
   if (orderResult) {
