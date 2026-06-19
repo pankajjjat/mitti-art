@@ -6,14 +6,25 @@ import {
   Mail,
   Phone,
   Heart,
+  MapPin,
+  ShieldCheck,
+  Truck,
+  RotateCcw,
+  HelpCircle,
 } from "lucide-react";
-import { categories } from "@/lib/products";
 
-const quickLinks = [
-  { label: "Explore", href: "#explore" },
-  { label: "About", href: "#about" },
-  { label: "Process", href: "#process" },
-  { label: "Contact", href: "#contact" },
+const categories = [
+  { label: "Canvas Art", href: "/shop?category=Canvas+Art" },
+  { label: "Mandala Art", href: "/shop?category=Mandala+Art" },
+  { label: "Religious Art", href: "/shop?category=Religious+Art" },
+  { label: "Floral Art", href: "/shop?category=Floral+Art" },
+];
+
+const supportLinks = [
+  { label: "Contact Us", href: "/contact", icon: Mail },
+  { label: "FAQ", href: "/faq", icon: HelpCircle },
+  { label: "Shipping Info", href: "/shipping", icon: Truck },
+  { label: "Returns & Exchanges", href: "/returns", icon: RotateCcw },
 ];
 
 const socialLinks = [
@@ -23,79 +34,98 @@ const socialLinks = [
     icon: Camera,
   },
   {
-    label: "Facebook",
-    href: "https://facebook.com/100077641696027",
-    icon: MessageCircle,
-  },
-  {
     label: "Pinterest",
     href: "https://pinterest.com/mittiart",
     icon: ImageIcon,
-  },
-  {
-    label: "Email",
-    href: "mailto:hello@mittiart.com",
-    icon: Mail,
   },
   {
     label: "WhatsApp",
     href: "https://wa.me/918770858280",
     icon: Phone,
   },
+  {
+    label: "Email",
+    href: "mailto:hello@mittiart.com",
+    icon: Mail,
+  },
+];
+
+const paymentMethods = [
+  { name: "UPI", icon: "/icons/upi.svg" },
+  { name: "Visa", icon: "/icons/visa.svg" },
+  { name: "Mastercard", icon: "/icons/mastercard.svg" },
+  { name: "PayPal", icon: "/icons/paypal.svg" },
 ];
 
 export default function Footer() {
   return (
     <footer className="bg-primary text-white">
       <div className="container-page py-16 md:py-20">
-        {/* Top Row — Brand + Social */}
-        <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
-          <div>
+        {/* Top Row — 4 Columns */}
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Brand */}
+          <div className="lg:col-span-1">
             <Link
               href="/"
               className="font-serif text-2xl tracking-tight text-white no-underline"
             >
               Mitti
             </Link>
-            <p className="mt-1.5 font-sans text-sm text-white/60">
-              Handcrafted Indian Art
+            <p className="mt-2 max-w-xs font-sans text-sm leading-relaxed text-white/60">
+              Handcrafted Indian art rooted in tradition. Each piece is a
+              conversation between ancient techniques and contemporary
+              aesthetics — made with patience, purpose, and love.
             </p>
+
+            {/* Social Icons */}
+            <div className="mt-6 flex items-center gap-2">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/60 transition-all duration-200 hover:border-accent hover:bg-accent hover:text-white"
+                  aria-label={social.label}
+                >
+                  <social.icon size={15} aria-hidden="true" />
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* Social Icons */}
-          <div className="flex items-center gap-3">
-            {socialLinks.map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white/70 transition-all duration-200 hover:border-accent hover:bg-accent hover:text-white"
-                aria-label={social.label}
-              >
-                <social.icon size={16} aria-hidden="true" />
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <hr className="my-12 border-white/10" />
-
-        {/* Middle Row — Links */}
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Quick Links */}
+          {/* Shop Categories */}
           <div>
             <h3 className="font-serif text-base font-semibold text-white">
-              Quick Links
+              Shop
             </h3>
             <ul className="mt-5 space-y-3">
-              {quickLinks.map((link) => (
+              {categories.map((cat) => (
+                <li key={cat.label}>
+                  <Link
+                    href={cat.href}
+                    className="font-sans text-sm text-white/60 transition-colors hover:text-white"
+                  >
+                    {cat.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h3 className="font-serif text-base font-semibold text-white">
+              Support
+            </h3>
+            <ul className="mt-5 space-y-3">
+              {supportLinks.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="font-sans text-sm text-white/60 transition-colors hover:text-white"
+                    className="flex items-center gap-2 font-sans text-sm text-white/60 transition-colors hover:text-white"
                   >
+                    <link.icon size={14} aria-hidden="true" />
                     {link.label}
                   </Link>
                 </li>
@@ -103,31 +133,12 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Categories */}
+          {/* Connect & Newsletter */}
           <div>
             <h3 className="font-serif text-base font-semibold text-white">
-              Categories
+              Connect
             </h3>
             <ul className="mt-5 space-y-3">
-              {categories.map((cat) => (
-                <li key={cat}>
-                  <Link
-                    href={`#explore`}
-                    className="font-sans text-sm text-white/60 transition-colors hover:text-white"
-                  >
-                    {cat}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h3 className="font-serif text-base font-semibold text-white">
-              Contact
-            </h3>
-            <ul className="mt-5 space-y-4">
               <li>
                 <a
                   href="mailto:hello@mittiart.com"
@@ -150,25 +161,83 @@ export default function Footer() {
               </li>
               <li>
                 <p className="flex items-center gap-2 font-sans text-sm text-white/60">
-                  <span aria-hidden="true" className="inline-block w-3.5" />
+                  <MapPin size={14} aria-hidden="true" />
                   India
                 </p>
               </li>
             </ul>
+
+            {/* Newsletter CTA */}
+            <div className="mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
+              <p className="font-sans text-xs font-medium uppercase tracking-[0.06em] text-white/80">
+                Stay inspired
+              </p>
+              <p className="mt-1 font-sans text-xs text-white/50">
+                Get updates on new collections and studio stories.
+              </p>
+              <Link
+                href="/#newsletter"
+                className="mt-3 inline-flex items-center gap-1.5 font-sans text-xs font-medium text-accent transition-colors hover:text-terra-400"
+              >
+                Join the Mitti Circle &rarr;
+              </Link>
+            </div>
           </div>
         </div>
 
         {/* Divider */}
         <hr className="my-12 border-white/10" />
 
-        {/* Bottom Row */}
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <p className="font-sans text-xs text-white/40">
-            &copy; {new Date().getFullYear()} Mitti. All rights reserved.
+        {/* Payment Methods */}
+        <div className="mb-8">
+          <p className="mb-3 text-center font-sans text-xs font-medium uppercase tracking-[0.08em] text-white/40">
+            Accepted Payments
           </p>
-          <p className="flex items-center gap-1.5 font-sans text-xs text-white/40">
-            Handcrafted with love in India
-            <Heart size={12} className="text-accent/70" aria-hidden="true" />
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {paymentMethods.map((method) => (
+              <div
+                key={method.name}
+                className="flex h-8 items-center rounded border border-white/10 bg-white/5 px-3 font-sans text-[0.625rem] font-medium uppercase tracking-[0.06em] text-white/40"
+              >
+                {method.name}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
+          <p className="font-sans text-xs text-white/40">
+            &copy; {new Date().getFullYear()} Mitti Art by Samuya. All rights
+            reserved.
+          </p>
+
+          <div className="flex items-center gap-4">
+            <Link
+              href="/privacy"
+              className="font-sans text-xs text-white/40 transition-colors hover:text-white/60"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/terms"
+              className="font-sans text-xs text-white/40 transition-colors hover:text-white/60"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              href="/shipping"
+              className="font-sans text-xs text-white/40 transition-colors hover:text-white/60"
+            >
+              Shipping Policy
+            </Link>
+          </div>
+
+          <p className="flex items-center gap-1.5 font-sans text-xs text-white/50">
+            <span className="flex items-center gap-1">
+              Handmade in India
+              <Heart size={11} className="text-accent/70" aria-hidden="true" />
+            </span>
           </p>
         </div>
       </div>

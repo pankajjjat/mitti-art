@@ -1,33 +1,163 @@
-// ─── PocketBase Migration Script ───
-// Run this script AFTER PocketBase is started and superuser is created
+// ─── PocketBase Seed Script ───
+// Mitti Art — E-Commerce Schema
+// Seeds products + testimonials, ensures collection API rules
 //
-// Step 1: Create superuser (one-time)
-//   ./pocketbase superuser upsert admin@mittiart.com "your-password" --dir=pb_data
+// Prerequisites:
+//   1. PocketBase served at PB_URL with migrations applied
+//   2. Superuser exists
 //
-// Step 2: Start PocketBase
-//   ./pocketbase serve
-//
-// Step 3: Run this script
+// Usage:
 //   npx tsx scripts/seed-pb.mts
-//
-// Or combine step 1+2:
-//   ./pocketbase superuser upsert admin@mittiart.com "your-password" --dir=pb_data && ./pocketbase serve
 
 import PocketBase from "pocketbase";
 import { products } from "../src/lib/products";
 
+// ─── Config ────────────────────────────────────────────────────
+
 const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090";
 const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || "admin@mittiart.com";
-const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || "mitti@2024!ChangeMeSecure";
+const ADMIN_PASSWORD =
+  process.env.PB_ADMIN_PASSWORD || "mitti@2024!ChangeMeSecure";
 
-async function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+// ─── Helpers ───────────────────────────────────────────────────
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function mapProduct(p: (typeof products)[number]) {
+  // Derive availability from legacy sold / inStock fields
+  let availability: string;
+  if (p.sold) {
+    availability = "Sold Out";
+  } else if (!p.inStock) {
+    availability = "Made to Order";
+  } else {
+    availability = "In Stock";
+  }
+
+  return {
+    title: p.name,
+    slug: p.slug,
+    description: p.description,
+    price: p.price,
+    // sale_price — not present in legacy data, leave unset
+    category: p.category,
+    materials: p.medium,
+    dimensions: p.dimensions,
+    // weight — not present in legacy data, leave unset
+    stock: p.inStock,
+    featured: p.featured || false,
+    images: [p.image], // wrap single image path into array (JSON field)
+    seo_title: `Mitti Art | ${p.name}`,
+    seo_description: p.description.slice(0, 160),
+    availability,
+  };
 }
 
-async function createCollection(pb: any, data: any) {
-  // PocketBase v0.39+ creates collections via the SDK's collections service
-  return pb.collections.create(data);
+// ─── API rules per collection ──────────────────────────────────
+
+const COLLECTION_RULES: Record<
+  string,
+  {
+    listRule: string | null;
+    viewRule: string | null;
+    createRule?: string | null;
+    updateRule?: string | null;
+    deleteRule?: string | null;
+  }
+> = {
+  products: {
+    listRule: "",
+    viewRule: "",
+  },
+  testimonials: {
+    listRule: "",
+    viewRule: "",
+  },
+  commissions: {
+    listRule:
+      "@request.auth.id = user.id || @request.auth.collectionName = '_superusers'",
+    viewRule:
+      "@request.auth.id = user.id || @request.auth.collectionName = '_superusers'",
+    createRule: "@request.auth.id != ''",
+    updateRule: "@request.auth.collectionName = '_superusers'",
+  },
+  orders: {
+    listRule:
+      "@request.auth.id = user.id || @request.auth.collectionName = '_superusers'",
+    viewRule:
+      "@request.auth.id = user.id || @request.auth.collectionName = '_superusers'",
+    createRule: "@request.auth.id != ''",
+    updateRule: "@request.auth.collectionName = '_superusers'",
+  },
+  users: {
+    listRule: "@request.auth.collectionName = '_superusers'",
+    viewRule:
+      "id = @request.auth.id || @request.auth.collectionName = '_superusers'",
+    updateRule:
+      "id = @request.auth.id || @request.auth.collectionName = '_superusers'",
+  },
+};
+
+async function applyRules(
+  pb: PocketBase,
+  collectionName: string
+): Promise<void> {
+  const rules = COLLECTION_RULES[collectionName];
+  if (!rules) return;
+
+  try {
+    const col = await pb.collections.getOne(collectionName, {});
+    let changed = false;
+
+    for (const [key, value] of Object.entries(rules)) {
+      const field = key as keyof typeof rules;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((col as any)[field] !== value) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (col as any)[field] = value;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      await pb.collections.update(col.id, col);
+      console.log(`   📋 API rules updated for "${collectionName}"`);
+    } else {
+      console.log(`   ✓ API rules for "${collectionName}" already correct`);
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`   ⚠ Could not update rules for "${collectionName}": ${msg}`);
+  }
 }
+
+// ─── Sample testimonials ───────────────────────────────────────
+
+const SAMPLE_TESTIMONIALS = [
+  {
+    customer_name: "Priya Sharma",
+    review:
+      "Samuya's Madhubani painting brought the soul of Bihar into our home. The intricate details and natural pigments are even more beautiful in person. We treasure it deeply.",
+    rating: 5,
+    featured: true,
+  },
+  {
+    customer_name: "Rajesh Mehta",
+    review:
+      "Commissioned a custom Ganesha piece for our new office. The process was incredibly personal — Samuya took the time to understand our vision. The result exceeded every expectation.",
+    rating: 5,
+    featured: true,
+  },
+  {
+    customer_name: "Ananya Gupta",
+    review:
+      "The resin coasters with preserved neem leaves make for such unique gifts. Every guest asks about them. Sustainable, beautiful, and deeply connected to Indian heritage.",
+    rating: 5,
+    featured: false,
+  },
+];
+
+// ─── Main ──────────────────────────────────────────────────────
 
 async function setup() {
   const pb = new PocketBase(PB_URL);
@@ -47,140 +177,101 @@ async function setup() {
 
   console.log("✅ Connected");
 
-  // Login as superuser using the _superusers collection (PocketBase v0.39+)
-  await pb.collection("_superusers").authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
+  // Login as superuser (PocketBase v0.39+)
+  await pb.collection("_superusers").authWithPassword(
+    ADMIN_EMAIL,
+    ADMIN_PASSWORD
+  );
   console.log("✅ Logged in as superuser");
 
-  // ─── Create collections ───
+  // ── Ensure collections exist (migrations should handle this) ──
   const collections = await pb.collections.getFullList();
-  const exists = (name: string) => collections.some((c: any) => c.name === name);
+  const colNames = new Set(collections.map((c: any) => c.name));
 
-  // Check if products already seeded (look for actual records)
-  const existingCount = (await pb.collection("products").getList(1, 1)).totalItems;
-  if (!exists("products")) {
+  // Testimonials — create via SDK if migration hasn't been applied yet
+  // NOTE: PocketBase v0.39+ uses `fields` instead of `schema` for collection creation
+  if (!colNames.has("testimonials")) {
+    console.log("   Testimonials collection not found — creating via SDK…");
     await pb.collections.create({
-      name: "products",
+      name: "testimonials",
       type: "base",
-      schema: [
-        { name: "name", type: "text", required: true },
-        { name: "hindiName", type: "text" },
-        { name: "slug", type: "text", required: true, unique: true },
-        { name: "image", type: "text" },
-        { name: "category", type: "text", required: true },
-        { name: "medium", type: "text" },
-        { name: "price", type: "number", required: true },
-        { name: "description", type: "text" },
-        { name: "story", type: "text" },
-        { name: "dimensions", type: "text" },
+      fields: [
+        { name: "customer_name", type: "text", required: true },
+        { name: "review", type: "text", required: true },
+        { name: "rating", type: "number" },
+        { name: "photo", type: "file" },
         { name: "featured", type: "bool" },
-        { name: "sold", type: "bool" },
-        { name: "year", type: "number" },
-        { name: "inStock", type: "bool" },
       ],
-      listRule: null,
-      viewRule: null,
+      listRule: "",
+      viewRule: "",
     });
-    console.log("✅ Products collection created");
+    console.log("✅ Testimonials collection created");
   } else {
-    console.log("   Products collection already exists");
+    console.log("   ✓ Testimonials collection exists");
   }
 
-  // Commissions collection
-  if (!exists("commissions")) {
-    await pb.collections.create({
-      name: "commissions",
-      type: "base",
-      schema: [
-        { name: "name", type: "text", required: true },
-        { name: "email", type: "email", required: true },
-        { name: "phone", type: "text" },
-        { name: "type", type: "text" },
-        { name: "description", type: "text" },
-        { name: "budget", type: "number" },
-        { name: "timeline", type: "text" },
-        { name: "reference", type: "text" },
-      ],
-      listRule: null,
-      viewRule: null,
-    });
-    console.log("✅ Commissions collection created");
+  // ── Apply API rules on all known collections ──
+  for (const name of Object.keys(COLLECTION_RULES)) {
+    if (colNames.has(name) || name === "testimonials") {
+      await applyRules(pb, name);
+    }
   }
 
-  // Subscribers collection
-  if (!exists("subscribers")) {
-    await pb.collections.create({
-      name: "subscribers",
-      type: "base",
-      schema: [
-        { name: "email", type: "email", required: true, unique: true },
-        { name: "name", type: "text" },
-      ],
-      listRule: null,
-      viewRule: null,
-    });
-    console.log("✅ Subscribers collection created");
-  }
+  // ── Seed products ──
+  const existingCount = (
+    await pb.collection("products").getList(1, 1)
+  ).totalItems;
 
-  // Orders collection
-  if (!exists("orders")) {
-    await pb.collections.create({
-      name: "orders",
-      type: "base",
-      schema: [
-        { name: "customerName", type: "text", required: true },
-        { name: "customerEmail", type: "email", required: true },
-        { name: "customerPhone", type: "text" },
-        { name: "address", type: "text" },
-        { name: "items", type: "json" },
-        { name: "total", type: "number" },
-        { name: "status", type: "text" },
-        { name: "notes", type: "text" },
-      ],
-      listRule: null,
-      viewRule: null,
-    });
-    console.log("✅ Orders collection created");
-  }
-
-  // ─── Seed products ───
   if (existingCount === 0) {
-    // Wait a moment for collection to be fully indexed
-    await sleep(500);
+    await sleep(500); // let indices settle
+
     for (const product of products) {
       try {
-        await pb.collection("products").create({
-          name: product.name,
-          hindiName: product.hindiName,
-          slug: product.slug,
-          image: `/images/${product.image}`,
-          category: product.category,
-          medium: product.medium,
-          price: product.price,
-          description: product.description,
-          story: product.story,
-          dimensions: product.dimensions,
-          featured: product.featured || false,
-          sold: product.sold || false,
-          year: product.year || 2024,
-          inStock: product.inStock,
-        });
+        const data = mapProduct(product);
+        await pb.collection("products").create(data);
         console.log(`   ✓ ${product.name}`);
-      } catch (e: any) {
-        console.error(`   ✗ Failed to create ${product.name}: ${e?.message}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`   ✗ Failed to create ${product.name}: ${msg}`);
       }
     }
-    console.log("✅ Products seeded");
+    console.log(`✅ Seeded ${products.length} products`);
   } else {
-    console.log("   Products already seeded");
+    console.log(`   ✓ Products already seeded (${existingCount} records)`);
   }
 
-  console.log("\n🎉 PocketBase setup complete!");
+  // ── Seed testimonials ──
+  const testimonialCount = (
+    await pb.collection("testimonials").getList(1, 1)
+  ).totalItems;
+
+  if (testimonialCount === 0) {
+    await sleep(300);
+
+    for (const t of SAMPLE_TESTIMONIALS) {
+      try {
+        await pb.collection("testimonials").create(t);
+        console.log(`   ✓ ${t.customer_name}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`   ✗ Failed to create testimonial "${t.customer_name}": ${msg}`);
+      }
+    }
+    console.log(`✅ Seeded ${SAMPLE_TESTIMONIALS.length} testimonials`);
+  } else {
+    console.log(
+      `   ✓ Testimonials already seeded (${testimonialCount} records)`
+    );
+  }
+
+  console.log("\n🎉 PocketBase seed complete!");
   console.log(`   Admin UI: ${PB_URL}/_/`);
   console.log(`   Email: ${ADMIN_EMAIL}`);
   console.log(`   Password: ${ADMIN_PASSWORD}`);
 }
 
-setup().catch((e) => {
-  console.error("❌ Setup failed:", e.message || e);
+setup().catch((e: unknown) => {
+  const msg = e instanceof Error ? e.message : String(e);
+  console.error("❌ Setup failed:", msg);
   process.exit(1);
 });

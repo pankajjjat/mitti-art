@@ -41,9 +41,11 @@ yarn-error.log*
 /pocketbase/pb_init/
 /pocketbase/pb_prod/
 /pocketbase/fresh_data/
+/pocketbase/pb_empty/
 /pocketbase/pocketbase.zip
 /pocketbase/pocketbase.exe
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+pb_token.txt

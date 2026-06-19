@@ -12,22 +12,20 @@ import {
   ArrowRight,
 } from "lucide-react";
 import clsx from "clsx";
-import { useCartStore } from "@/lib/store";
+import { useAppStore } from "@/lib/store";
 
 function formatPrice(price: number): string {
   return `₹${price.toLocaleString("en-IN")}`;
 }
 
 export default function CartDrawer() {
-  const {
-    items,
-    isOpen,
-    closeCart,
-    removeItem,
-    updateQuantity,
-    totalPrice,
-    totalItems,
-  } = useCartStore();
+  const items = useAppStore((s) => s.items);
+  const isOpen = useAppStore((s) => s.cartOpen);
+  const closeCart = useAppStore((s) => s.closeCart);
+  const removeItem = useAppStore((s) => s.removeFromCart);
+  const updateQuantity = useAppStore((s) => s.updateQuantity);
+  const totalPrice = useAppStore((s) => s.total);
+  const totalItems = useAppStore((s) => s.totalItems);
 
   // Body scroll lock
   useEffect(() => {
@@ -56,7 +54,7 @@ export default function CartDrawer() {
     const itemLines = items
       .map(
         (item) =>
-          `${item.product.name} (${item.product.hindiName}) × ${item.quantity} = ${formatPrice(item.product.price * item.quantity)}`
+          `${item.title} × ${item.quantity} = ${formatPrice(item.price * item.quantity)}`
       )
       .join("\n");
     const total = formatPrice(totalPrice());
@@ -134,14 +132,14 @@ export default function CartDrawer() {
               <ul className="space-y-5">
                 {items.map((item) => (
                   <li
-                    key={item.product.id}
+                    key={item.id}
                     className="flex gap-4 rounded-lg border border-border bg-page p-3"
                   >
                     {/* Thumbnail */}
                     <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-earth-100">
                       <Image
-                        src={item.product.image}
-                        alt={item.product.name}
+                        src={item.image}
+                        alt={item.title}
                         fill
                         sizes="80px"
                         className="object-cover"
@@ -152,13 +150,10 @@ export default function CartDrawer() {
                     <div className="flex min-w-0 flex-1 flex-col justify-between">
                       <div>
                         <h3 className="truncate font-serif text-sm font-semibold text-text">
-                          {item.product.name}
+                          {item.title}
                         </h3>
                         <p className="truncate font-sans text-xs text-text-muted">
-                          {item.product.hindiName}
-                        </p>
-                        <p className="mt-1 font-sans text-sm font-medium text-text">
-                          {formatPrice(item.product.price)}
+                          {formatPrice(item.price)}
                         </p>
                       </div>
 
@@ -169,7 +164,7 @@ export default function CartDrawer() {
                             type="button"
                             onClick={() =>
                               updateQuantity(
-                                item.product.id,
+                                item.productId,
                                 item.quantity - 1
                               )
                             }
@@ -185,7 +180,7 @@ export default function CartDrawer() {
                             type="button"
                             onClick={() =>
                               updateQuantity(
-                                item.product.id,
+                                item.productId,
                                 item.quantity + 1
                               )
                             }
@@ -199,9 +194,9 @@ export default function CartDrawer() {
                         {/* Remove */}
                         <button
                           type="button"
-                          onClick={() => removeItem(item.product.id)}
+                          onClick={() => removeItem(item.productId)}
                           className="flex h-7 w-7 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-error/10 hover:text-error"
-                          aria-label={`Remove ${item.product.name}`}
+                          aria-label={`Remove ${item.title}`}
                         >
                           <Trash2 size={13} />
                         </button>

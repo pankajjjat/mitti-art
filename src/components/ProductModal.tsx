@@ -5,7 +5,7 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import clsx from "clsx";
 import type { Product } from "@/lib/products";
-import { useCartStore } from "@/lib/store";
+import { useAppStore } from "@/lib/store";
 
 type ProductModalProps = {
   product: Product | null;
@@ -19,7 +19,7 @@ function formatPrice(price: number): string {
 export default function ProductModal({ product, onClose }: ProductModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
-  const addItem = useCartStore((s) => s.addItem);
+  const addItem = useAppStore((s) => s.addToCart);
 
   // Escape key handler
   useEffect(() => {
@@ -63,7 +63,15 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
   );
 
   const handleAddToCart = useCallback(() => {
-    if (product) addItem(product);
+    if (product)
+      addItem({
+        id: `cart-${Date.now()}`,
+        productId: product.slug,
+        title: product.name,
+        price: product.price,
+        quantity: 1,
+        image: product.image,
+      });
   }, [product, addItem]);
 
   if (!product) return null;
