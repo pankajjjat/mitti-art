@@ -39,6 +39,7 @@ yarn-error.log*
 # pocketbase
 /pocketbase/pb_data/
 /pocketbase/pb_init/
+/pocketbase/fresh_data/
 /pocketbase/pocketbase.zip
 /pocketbase/pocketbase.exe
 
