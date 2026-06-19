@@ -26,8 +26,6 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, router]);
 
-  if (isAuthenticated) return null;
-
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();

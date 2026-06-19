@@ -28,8 +28,6 @@ export default function SignupPage() {
     }
   }, [isAuthenticated, router]);
 
-  if (isAuthenticated) return null;
-
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
