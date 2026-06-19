@@ -53,6 +53,8 @@ cd pocketbase
 
 The admin dashboard will be at [http://127.0.0.1:8090/_/](http://127.0.0.1:8090/_/)
 
+> **Note:** The `pb_migrations/` folder already contains the 4 collection schemas. When you start PocketBase with a fresh `pb_data`, it automatically creates the collections with all fields and public read access on products. 
+
 ### 3. Seed the database
 
 ```bash
@@ -60,7 +62,7 @@ The admin dashboard will be at [http://127.0.0.1:8090/_/](http://127.0.0.1:8090/
 npx tsx scripts/seed-pb.mts
 ```
 
-This creates 4 collections (products, commissions, subscribers, orders) and seeds all 13 products.
+This populates the 13 products. The collections are already created by migrations — the script only seeds data if the database is empty.
 
 ### 4. Configure environment
 

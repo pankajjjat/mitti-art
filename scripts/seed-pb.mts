@@ -55,7 +55,8 @@ async function setup() {
   const collections = await pb.collections.getFullList();
   const exists = (name: string) => collections.some((c: any) => c.name === name);
 
-  // Products collection
+  // Check if products already seeded (look for actual records)
+  const existingCount = (await pb.collection("products").getList(1, 1)).totalItems;
   if (!exists("products")) {
     await pb.collections.create({
       name: "products",
@@ -142,7 +143,7 @@ async function setup() {
   }
 
   // ─── Seed products ───
-  if (!exists("products")) {
+  if (existingCount === 0) {
     // Wait a moment for collection to be fully indexed
     await sleep(500);
     for (const product of products) {
