@@ -1,102 +1,51 @@
 // ─── PocketBase Client ───
+// Provides server-side data fetching functions
 import PocketBase from "pocketbase";
 
 const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090";
 
-export const pb = new PocketBase(PB_URL);
-
-export type PBProduct = {
-  id: string;
-  name: string;
-  hindiName: string;
-  slug: string;
-  image: string;
-  category: string;
-  medium: string;
-  price: number;
-  description: string;
-  story: string;
-  dimensions: string;
-  featured: boolean;
-  sold: boolean;
-  year: number;
-  inStock: boolean;
-  created: string;
-  updated: string;
-};
-
-export type PBCommission = {
-  name: string;
-  email: string;
-  phone?: string;
-  type: string;
-  description: string;
-  budget?: number;
-  timeline?: string;
-  reference?: string;
-};
-
-export type PBSubscriber = {
-  email: string;
-  name?: string;
-};
-
-export async function submitCommission(data: PBCommission) {
-  try {
-    return await pb.collection("commissions").create(data);
-  } catch (error) {
-    console.error("Failed to submit commission:", error);
-    throw error;
-  }
+// Server-side client creator (works in server components / API routes)
+export function createPocketBaseClient() {
+  return new PocketBase(PB_URL);
 }
 
-export async function subscribeToNewsletter(data: PBSubscriber) {
+// Fetch all products from PocketBase
+export async function getProducts() {
   try {
-    return await pb.collection("subscribers").create(data);
-  } catch (error: any) {
-    if (error?.status === 409) {
-      // Already subscribed — not an error
-      return { alreadySubscribed: true };
-    }
-    console.error("Failed to subscribe:", error);
-    throw error;
-  }
-}
-
-export async function getProducts(
-  options?: {
-    category?: string;
-    featured?: boolean;
-    limit?: number;
-    page?: number;
-  }
-): Promise<PBProduct[]> {
-  try {
-    const filter: string[] = ["inStock=true"];
-    if (options?.category) {
-      filter.push(`category="${options.category}"`);
-    }
-    if (options?.featured) {
-      filter.push("featured=true");
-    }
-    const result = await pb.collection("products").getList(options?.page || 1, options?.limit || 50, {
-      filter: filter.join(" && "),
+    const pb = createPocketBaseClient();
+    const records = await pb.collection("products").getFullList({
       sort: "-created",
     });
-    return result.items as unknown as PBProduct[];
-  } catch (error) {
-    console.error("Failed to fetch products:", error);
-    // Fallback to local data
-    return [];
+    return records;
+  } catch {
+    console.warn("⚠️  PocketBase not running, returning null");
+    return null;
   }
 }
 
-export async function getProduct(slug: string): Promise<PBProduct | null> {
+// Fetch a single product by slug
+export async function getProductBySlug(slug: string) {
   try {
-    const result = await pb.collection("products").getFirstListItem(`slug="${slug}"`);
-    return result as unknown as PBProduct;
-  } catch (error) {
-    console.error("Failed to fetch product:", error);
+    const pb = createPocketBaseClient();
+    const records = await pb.collection("products").getList(1, 1, {
+      filter: `slug = "${slug}"`,
+    });
+    return records.items[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+// Fetch featured products
+export async function getFeaturedProducts() {
+  try {
+    const pb = createPocketBaseClient();
+    const records = await pb.collection("products").getFullList({
+      filter: "featured = true && inStock = true",
+      sort: "-created",
+    });
+    return records;
+  } catch {
     return null;
   }
 }

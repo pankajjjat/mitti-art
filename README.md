@@ -1,136 +1,142 @@
 # Mitti — Handcrafted Indian Art
 
-**Warm Earth meets Deep Indigo.** A premium Next.js e-commerce website for Mitti, an Indian handcrafted art brand by Samuya Chaurasia.
+**Warm Earth meets Deep Indigo.** A premium website for Mitti, an Indian handcrafted art brand by Samuya Chaurasia.
+
+Built with **Next.js 16** + **TypeScript** + **Tailwind v4** + **PocketBase**
 
 ## ✨ Features
 
-- **Next.js 16** with App Router, TypeScript & Tailwind v4
-- **Editorial gallery layout** — story-first, product-second design
-- **Product catalog** — 13 handcrafted artworks with categories, filters & sorting
-- **Product modal** — full-screen overlay with image, details, story & add-to-cart
-- **Shopping cart** — slide-out drawer with quantity controls & checkout
-- **Responsive design** — mobile-first with 2-column grid on mobile, 3 on desktop
-- **Animations** — fade-up on scroll, marquee ticker, product hover effects
-- **Commission form** — custom order requests with mailto integration
-- **PocketBase backend** — open-source backend for products, commissions & subscribers
-- **SEO optimized** — meta tags, Open Graph, structured product data
+- **Product Gallery** — 13 original artworks across 6 categories with filter/sort
+- **Product Modal** — Full-screen overlay with story, dimensions, price
+- **Cart System** — Zustand-powered slide-out drawer
+- **Commission Form** — Custom order requests
+- **About Section** — Artist story with stats
+- **Process Timeline** — 4-step creative journey
+- **Testimonials** — Client reviews carousel
+- **Newsletter Signup** — Email collection
+- **Responsive** — Mobile-first, fully adaptive
+- **PocketBase Backend** — Self-hosted, real-time capable
 
-## 🎨 Brand Kit
+## 🖼️ The Brand
 
-See [DESIGN.md](./DESIGN.md) for the complete brand identity system including:
-- Color palette (Warm Earth, Deep Indigo, Terracotta, Gold)
-- Typography (Playfair Display + Inter + JetBrains Mono)
-- Component styling, spacing, elevation & layout principles
+| Token | Value |
+|---|---|
+| Primary | `#1A3C5E` Deep Navy |
+| Secondary | `#8B4513` Earth Brown |
+| Accent | `#C04000` Warm Terracotta |
+| Sandstone | `#D4B48C` |
+| Background | `#F5F0EB` Off-White |
+| Font: Display | Playfair Display |
+| Font: Body | Inter |
 
-## 🚀 Quick Start
+## 🚀 Getting Started
 
-### Prerequisites
-
-- Node.js 18+
-- npm
-
-### Install & Run
+### 1. Run the Next.js dev server
 
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000)
 
-### PocketBase Setup
-
-The website can run fully with static product data. For the backend features (commission form, newsletter, admin panel):
-
-1. **Start PocketBase:**
-
-   ```bash
-   cd pocketbase
-   ./pocketbase serve
-   ```
-
-2. **Seed the database:**
-
-   ```bash
-   npx tsx scripts/seed-pb.mts
-   ```
-
-3. **Admin UI:** [http://127.0.0.1:8090/_/](http://127.0.0.1:8090/_/)
-
-4. **Update `.env.local`** if your PocketBase URL is different.
-
-### Production Build
+### 2. Start PocketBase (backend)
 
 ```bash
-npm run build
-npm start
+cd pocketbase
+
+# First time only: create superuser
+./pocketbase.exe superuser upsert admin@mittiart.com "your-password" --dir=pb_data
+
+# Start the server
+./pocketbase.exe serve --dir=pb_data
 ```
 
-## 📁 Project Structure
+The admin dashboard will be at [http://127.0.0.1:8090/_/](http://127.0.0.1:8090/_/)
 
-```
-mitti-art/
-├── src/
-│   ├── app/
-│   │   ├── globals.css        # Tailwind v4 theme + brand tokens
-│   │   ├── layout.tsx         # Root layout with fonts + navbar + footer
-│   │   └── page.tsx           # Home page (all sections)
-│   ├── components/
-│   │   ├── Button.tsx         # Reusable button (primary/outline/ghost)
-│   │   ├── Navbar.tsx         # Fixed nav with glass effect
-│   │   ├── Hero.tsx           # Full-bleed hero with dual CTA
-│   │   ├── Marquee.tsx        # Infinite scrolling category ticker
-│   │   ├── ProductGrid.tsx    # Filterable/sortable product grid
-│   │   ├── ProductCard.tsx    # 3:4 aspect ratio product card
-│   │   ├── ProductModal.tsx   # Full-screen product detail modal
-│   │   ├── About.tsx          # Artist story + stats section
-│   │   ├── Process.tsx        # 4-step creative process timeline
-│   │   ├── Testimonials.tsx   # Auto-rotating testimonial carousel
-│   │   ├── CommissionForm.tsx # Custom order request form
-│   │   ├── Newsletter.tsx     # Email signup section
-│   │   ├── Footer.tsx         # Full footer with links + social
-│   │   ├── CartDrawer.tsx     # Slide-out shopping cart
-│   │   └── SectionHeading.tsx # Reusable section header
-│   └── lib/
-│       ├── products.ts        # Product data (13 artworks)
-│       ├── store.ts           # Zustand cart store
-│       └── pocketbase.ts      # PocketBase client + API helpers
-├── public/
-│   ├── images/                # Product images
-│   └── favicon.svg
-├── pocketbase/
-│   └── pocketbase.exe         # PocketBase executable
-├── scripts/
-│   └── seed-pb.mts           # DB migration + seed script
-├── DESIGN.md                  # Full brand kit
-└── README.md
+### 3. Seed the database
+
+```bash
+# With PocketBase running, from the project root:
+npx tsx scripts/seed-pb.mts
 ```
 
-## 🛒 Cart & Checkout
+This creates 4 collections (products, commissions, subscribers, orders) and seeds all 13 products.
 
-- **Add to Cart** from the product modal
-- **Cart drawer** slides in from the right with quantity controls
-- **Checkout** opens a pre-filled email to hello@mittiart.com with order details
-- For fully automated checkout, integrate Razorpay or a payment gateway
+### 4. Configure environment
 
-## 🔧 PocketBase API
+Create `.env.local`:
 
-| Collection    | Endpoint              | Notes                        |
-|---------------|-----------------------|------------------------------|
-| Products      | `/api/collections/products/records` | Read-only for guests |
-| Commissions   | `/api/collections/commissions/records` | Create only |
-| Subscribers   | `/api/collections/subscribers/records` | Create only (unique email) |
-| Orders        | `/api/collections/orders/records` | Admin only |
+```
+NEXT_PUBLIC_POCKETBASE_URL=http://127.0.0.1:8090
+PB_ADMIN_EMAIL=admin@mittiart.com
+PB_ADMIN_PASSWORD=your-password
+```
 
-## 🌐 Deployment
+## 🏗️ Project Structure
 
-- **Frontend:** Deploy to Vercel (`vercel --prod`)
-- **Backend:** Deploy PocketBase to Railway, Fly.io, or a VPS
-- Set `NEXT_PUBLIC_POCKETBASE_URL` to your PocketBase instance URL
+```
+src/
+├── app/
+│   ├── globals.css      # Tailwind v4 theme + brand tokens
+│   ├── layout.tsx       # Root layout with fonts
+│   └── page.tsx         # Main single-page layout
+├── components/
+│   ├── Navbar.tsx       # Fixed glass-effect navigation
+│   ├── Hero.tsx         # Full-bleed hero section
+│   ├── ProductGrid.tsx  # Filterable/sortable grid
+│   ├── ProductCard.tsx  # 3:4 aspect card
+│   ├── ProductModal.tsx # Overlay product detail
+│   ├── About.tsx        # Artist story
+│   ├── Process.tsx      # Creative journey
+│   ├── Testimonials.tsx # Client reviews
+│   ├── CommissionForm.tsx # Custom orders
+│   ├── Newsletter.tsx   # Email signup
+│   ├── Footer.tsx       # Full footer
+│   ├── CartDrawer.tsx   # Slide-out cart
+│   ├── Button.tsx       # Reusable button
+│   ├── SectionHeading.tsx # Section titles
+│   └── Marquee.tsx      # Infinite ticker
+├── lib/
+│   ├── products.ts      # Static product data (fallback)
+│   ├── pocketbase.ts    # PocketBase API client
+│   └── store.ts         # Zustand cart store
+scripts/
+└── seed-pb.mts          # Database seeder
+DESIGN.md                # Full brand kit
+```
 
-## 📝 License
+## 📦 Products
 
-All rights reserved. Mitti Art © 2024 Samuya Chaurasia.
+13 handcrafted artworks including:
+
+- Kamal Vatika · Madhubani · ₹8,500
+- Surya Om Mandala · Metal Wall Art · ₹12,000
+- Shanti Padma · Carved Panel · ₹18,000
+- Prakriti · Resin Art · ₹6,500
+- Surya Kiran · Mosaic · ₹9,500
+- Ganesha Darshan · Ceramic · ₹15,000
+- Gul-e-Nasturtium · Watercolor · ₹4,500
+- Suvarna Patra · Resin Art · ₹3,500
+- Ekadanta · Folk Art · ₹11,000
+- Alankara Gaja · Miniature · ₹14,000
+- Padma Mandala · Mixed Media · ₹16,000
+- Surya Pushp · Botanical · ₹4,000
+- Sukhi Phool · Resin Art · ₹5,500
+
+## 🛠️ Tech Stack
+
+| Tool | Version |
+|---|---|
+| Next.js | 16.2.9 |
+| TypeScript | ~5.8 |
+| Tailwind CSS | v4 |
+| PocketBase | 0.39.4 |
+| Zustand | latest |
+| React | 19.x |
+| Font: Playfair Display + Inter | Google Fonts |
+
+## 🌐 Links
+
+- [GitHub Repository](https://github.com/pankajjjat/mitti-art)
+- [PocketBase](https://github.com/pocketbase/pocketbase)
+- [Next.js](https://nextjs.org/)
