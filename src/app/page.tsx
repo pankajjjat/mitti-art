@@ -12,7 +12,6 @@ import Process from "@/components/Process";
 import Testimonials from "@/components/Testimonials";
 import CommissionForm from "@/components/CommissionForm";
 import Newsletter from "@/components/Newsletter";
-import Marquee from "@/components/Marquee";
 import { products } from "@/lib/products";
 
 const categoriesData = [
@@ -63,11 +62,6 @@ export default function HomePage() {
     <>
       {/* ─── HERO ─── */}
       <Hero />
-
-      {/* ─── MARQUEE ─── */}
-      <div className="relative z-10 -mt-6">
-        <Marquee />
-      </div>
 
       {/* ─── FEATURED PRODUCTS ─── */}
       <section id="featured" className="py-24 md:py-32">
