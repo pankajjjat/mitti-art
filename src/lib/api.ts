@@ -7,7 +7,6 @@ import { generateOrderId } from "@/lib/utils";
 import type {
   Order,
   Commission,
-  Testimonial,
   CartItem,
   Address,
 } from "@/lib/types";
@@ -215,60 +214,5 @@ export async function fetchCommissions(
   } catch (err) {
     console.warn("⚠️  fetchCommissions failed:", err);
     return fail("Could not fetch commissions. PocketBase may be offline.");
-  }
-}
-
-// ─── Testimonials ───
-
-/**
- * Submit a customer testimonial.
- */
-export async function submitTestimonial(
-  input: Omit<Testimonial, "id" | "featured">
-): Promise<ApiResponse<Testimonial>> {
-  try {
-    const pb = createPocketBaseClient();
-    const record = await pb.collection("testimonials").create({
-      customer_name: input.customer_name,
-      review: input.review,
-      rating: input.rating,
-      photo: input.photo || null,
-      featured: false,
-    });
-
-    return ok(record as unknown as Testimonial);
-  } catch (err) {
-    console.warn("⚠️  submitTestimonial fallback:", err);
-    const fallback: Testimonial = {
-      id: `local_${Date.now()}`,
-      customer_name: input.customer_name,
-      review: input.review,
-      rating: input.rating,
-      photo: input.photo,
-      featured: false,
-    };
-    return ok(fallback);
-  }
-}
-
-// ─── Newsletter ───
-
-/**
- * Subscribe an email address to the newsletter.
- */
-export async function subscribeToNewsletter(
-  email: string
-): Promise<ApiResponse<{ id: string; email: string }>> {
-  try {
-    const pb = createPocketBaseClient();
-    const record = await pb.collection("newsletter_subscribers").create({
-      email,
-      active: true,
-    });
-
-    return ok({ id: record.id, email: record.email });
-  } catch (err) {
-    console.warn("⚠️  subscribeToNewsletter fallback:", err);
-    return ok({ id: `local_${Date.now()}`, email });
   }
 }
