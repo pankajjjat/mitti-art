@@ -5,7 +5,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { createPocketBaseClient } from "@/lib/pocketbase";
+import { supabase } from "@/lib/supabase";
 import type { UserProfile, Address, CartItem } from "@/lib/types";
 
 // ─── Cart ───
@@ -163,26 +163,25 @@ export const useAppStore = create<AppStore>()(
 
       login: async (email: string, password: string) => {
         try {
-          const pb = createPocketBaseClient();
-          const authData = await pb
-            .collection("users")
-            .authWithPassword(email, password);
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (error) throw error;
 
           const profile: UserProfile = {
-            id: authData.record.id,
-            name: authData.record.name || authData.record.email,
-            email: authData.record.email,
-            phone: authData.record.phone,
-            avatar: authData.record.avatar
-              ? pb.files.getUrl(authData.record, authData.record.avatar)
-              : undefined,
-            address: authData.record.address || [],
-            wishlist: authData.record.wishlist || [],
+            id: data.user.id,
+            name: data.user.user_metadata?.name || email,
+            email: data.user.email || email,
+            phone: data.user.phone || undefined,
+            avatar: data.user.user_metadata?.avatar_url || undefined,
+            address: [],
+            wishlist: [],
           };
 
           set({
             user: profile,
-            token: authData.token,
+            token: data.session?.access_token || null,
             isAuthenticated: true,
           });
 
@@ -200,15 +199,18 @@ export const useAppStore = create<AppStore>()(
         passwordConfirm: string
       ) => {
         try {
-          const pb = createPocketBaseClient();
+          if (password !== passwordConfirm) {
+            throw new Error("Passwords do not match");
+          }
 
-          await pb.collection("users").create({
-            name,
+          const { error } = await supabase.auth.signUp({
             email,
             password,
-            passwordConfirm,
-            emailVisibility: true,
+            options: {
+              data: { name },
+            },
           });
+          if (error) throw error;
 
           // Auto-login after signup
           return await get().login(email, password);
@@ -219,12 +221,7 @@ export const useAppStore = create<AppStore>()(
       },
 
       logout: () => {
-        try {
-          const pb = createPocketBaseClient();
-          pb.authStore.clear();
-        } catch {
-          // PB might not be running
-        }
+        supabase.auth.signOut();
         set({
           user: null,
           token: null,

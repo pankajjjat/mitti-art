@@ -1,36 +1,13 @@
-// ─── Mitti Art — Enhanced PocketBase Client ───
-// Provides server-side & client-side data fetching with proper error handling.
+// ─── Mitti Art — Data Layer (Supabase) ───
+// Replaces PocketBase with Supabase. Same exports, no other file changes.
 
-import PocketBase from "pocketbase";
+import { supabase } from "@/lib/supabase";
 import type {
   MittiProduct,
   ProductCategory,
   Testimonial,
+  ProductAvailability,
 } from "@/lib/types";
-
-const PB_URL =
-  process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090";
-
-// ─── Client factory ───
-
-/**
- * Create a new PocketBase client instance.
- * Safe to call in server components, API routes, and client components.
- */
-export function createPocketBaseClient() {
-  return new PocketBase(PB_URL);
-}
-
-/**
- * Create an authenticated PocketBase client from a cookie/token string.
- * Use this in server components / API routes where the token is available
- * from the request cookie.
- */
-export function createAuthenticatedClient(token: string) {
-  const pb = createPocketBaseClient();
-  pb.authStore.save(token, null);
-  return pb;
-}
 
 // ─── Products ───
 
@@ -43,101 +20,116 @@ export interface ProductQueryParams {
   search?: string;
 }
 
-/**
- * Fetch products with optional filtering, sorting, and pagination.
- * Safe for SSR — returns empty array on error instead of throwing.
- */
+function mapProduct(record: Record<string, unknown>): MittiProduct {
+  return {
+    id: record.id as string,
+    title: record.title as string,
+    slug: record.slug as string,
+    description: (record.description as string) || "",
+    price: Number(record.price),
+    sale_price: record.sale_price ? Number(record.sale_price) : undefined,
+    category: record.category as ProductCategory,
+    materials: (record.materials as string) || "",
+    dimensions: (record.dimensions as string) || "",
+    weight: (record.weight as string) || "",
+    stock: record.stock as boolean,
+    featured: record.featured as boolean,
+    images: (record.images as string[]) || [],
+    seo_title: record.seo_title as string | undefined,
+    seo_description: record.seo_description as string | undefined,
+    availability: ((record.availability as string) || "In Stock") as ProductAvailability,
+    created: record.created as string,
+    updated: record.updated as string,
+  };
+}
+
 export async function getProducts(
   params: ProductQueryParams = {}
 ): Promise<MittiProduct[]> {
   try {
-    const pb = createPocketBaseClient();
-    const { page = 1, perPage = 50, filter, sort, category, search } = params;
+    const { page = 1, perPage = 50, category, search } = params;
+    let query = supabase
+      .from("products")
+      .select("*", { count: "exact" })
+      .order("created", { ascending: false })
+      .range((page - 1) * perPage, page * perPage - 1);
 
-    // Build filter string
-    const filters: string[] = [];
-    if (filter) filters.push(filter);
-    if (category) filters.push(`category = "${category}"`);
+    if (category) {
+      query = query.eq("category", category);
+    }
     if (search) {
-      filters.push(
-        `(title ~ "${search}" || description ~ "${search}")`
-      );
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
-    const mergedFilter = filters.length > 0 ? filters.join(" && ") : "";
-
-    const result = await pb.collection("products").getList(page, perPage, {
-      ...(mergedFilter && { filter: mergedFilter }),
-      sort: sort || "-created",
-    });
-
-    return result.items as unknown as MittiProduct[];
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map((r) => mapProduct(r as unknown as Record<string, unknown>));
   } catch (err) {
     console.warn("⚠️  getProducts failed:", err);
     return [];
   }
 }
 
-/**
- * Fetch a single product by its slug.
- */
 export async function getProductBySlug(
   slug: string
 ): Promise<MittiProduct | null> {
   try {
-    const pb = createPocketBaseClient();
-    const result = await pb.collection("products").getList(1, 1, {
-      filter: `slug = "${slug}"`,
-    });
-    return (result.items[0] as unknown as MittiProduct) || null;
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+    if (error) throw error;
+    return data ? mapProduct(data as unknown as Record<string, unknown>) : null;
   } catch (err) {
     console.warn(`⚠️  getProductBySlug("${slug}") failed:`, err);
     return null;
   }
 }
 
-/**
- * Fetch a single product by its PocketBase ID.
- */
 export async function getProductById(
   id: string
 ): Promise<MittiProduct | null> {
   try {
-    const pb = createPocketBaseClient();
-    const record = await pb.collection("products").getOne(id);
-    return record as unknown as MittiProduct;
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error) throw error;
+    return data ? mapProduct(data as unknown as Record<string, unknown>) : null;
   } catch (err) {
     console.warn(`⚠️  getProductById("${id}") failed:`, err);
     return null;
   }
 }
 
-/**
- * Fetch all featured products.
- */
 export async function getFeaturedProducts(): Promise<MittiProduct[]> {
   try {
-    const pb = createPocketBaseClient();
-    const records = await pb.collection("products").getFullList({
-      filter: "featured = true && stock = true",
-      sort: "-created",
-    });
-    return records as unknown as MittiProduct[];
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("featured", true)
+      .eq("stock", true)
+      .order("created", { ascending: false });
+    if (error) throw error;
+    return (data || []).map((r) => mapProduct(r as unknown as Record<string, unknown>));
   } catch (err) {
     console.warn("⚠️  getFeaturedProducts failed:", err);
     return [];
   }
 }
 
-/**
- * Get all distinct product categories.
- */
 export async function getCategories(): Promise<ProductCategory[]> {
   try {
-    const products = await getProducts({ perPage: 200 });
+    const { data, error } = await supabase
+      .from("products")
+      .select("category")
+      .neq("category", null);
+    if (error) throw error;
     const cats = new Set<ProductCategory>();
-    products.forEach((p) => {
-      if (p.category) cats.add(p.category);
+    (data || []).forEach((r) => {
+      if (r.category) cats.add(r.category as ProductCategory);
     });
     return Array.from(cats);
   } catch (err) {
@@ -146,21 +138,21 @@ export async function getCategories(): Promise<ProductCategory[]> {
   }
 }
 
-/**
- * Get related products (same category, excluding current product).
- */
 export async function getRelatedProducts(
   productId: string,
   category: ProductCategory,
   limit = 4
 ): Promise<MittiProduct[]> {
   try {
-    const pb = createPocketBaseClient();
-    const result = await pb.collection("products").getList(1, limit + 1, {
-      filter: `category = "${category}" && id != "${productId}"`,
-      sort: "-created",
-    });
-    return result.items.slice(0, limit) as unknown as MittiProduct[];
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("category", category)
+      .neq("id", productId)
+      .order("created", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data || []).map((r) => mapProduct(r as unknown as Record<string, unknown>));
   } catch (err) {
     console.warn("⚠️  getRelatedProducts failed:", err);
     return [];
@@ -169,36 +161,42 @@ export async function getRelatedProducts(
 
 // ─── Testimonials ───
 
-/**
- * Fetch approved/featured testimonials.
- */
 export async function getTestimonials(): Promise<Testimonial[]> {
   try {
-    const pb = createPocketBaseClient();
-    const records = await pb.collection("testimonials").getFullList({
-      filter: "featured = true",
-      sort: "-created",
-    });
-    return records as unknown as Testimonial[];
+    const { data, error } = await supabase
+      .from("testimonials")
+      .select("*")
+      .eq("featured", true)
+      .order("created", { ascending: false });
+    if (error) throw error;
+    return (data || []).map(
+      (r: Record<string, unknown>) =>
+        ({
+          id: r.id,
+          customer_name: r.customer_name,
+          review: r.review,
+          rating: r.rating,
+          photo: r.photo || undefined,
+          featured: r.featured,
+        }) as Testimonial
+    );
   } catch (err) {
     console.warn("⚠️  getTestimonials failed:", err);
     return [];
   }
 }
 
-// ─── Utility ───
+// ─── Utility (kept for compat — Supabase uses URLs directly from DB) ───
 
-/**
- * Get a full PocketBase file URL for a given record's file field.
- */
+export async function createPocketBaseClient() {
+  console.warn("⚠️  createPocketBaseClient() is deprecated — use supabase instead");
+  return null;
+}
+
 export function getFileUrl(
-  record: { id: string; collectionId?: string; collectionName?: string },
+  _record: { id: string; collectionId?: string; collectionName?: string },
   fileName: string
 ): string {
-  try {
-    const pb = createPocketBaseClient();
-    return pb.files.getUrl(record, fileName);
-  } catch {
-    return "";
-  }
+  // Supabase stores full image paths in the DB
+  return fileName;
 }

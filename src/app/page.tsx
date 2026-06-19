@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { Product } from "@/lib/products";
+import type { MittiProduct } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 import Hero from "@/components/Hero";
 import SectionHeading from "@/components/SectionHeading";
 import ProductGrid from "@/components/ProductGrid";
@@ -12,7 +14,7 @@ import Process from "@/components/Process";
 import Testimonials from "@/components/Testimonials";
 import CommissionForm from "@/components/CommissionForm";
 import Newsletter from "@/components/Newsletter";
-import { products } from "@/lib/products";
+import { products as fallbackProducts } from "@/lib/products";
 
 const categoriesData = [
   {
@@ -45,10 +47,49 @@ const categoriesData = [
   },
 ];
 
-const featuredProducts = products.filter((p) => p.featured);
+// Map PB product to the Product type the UI expects
+function toLegacyProduct(pb: MittiProduct): Product {
+  return {
+    id: pb.id,
+    name: pb.title,
+    hindiName: "",
+    slug: pb.slug,
+    image: pb.images?.[0] || "",
+    category: pb.category,
+    medium: pb.materials || "",
+    price: pb.sale_price ?? pb.price,
+    description: pb.description,
+    story: "",
+    dimensions: pb.dimensions || "",
+    featured: pb.featured,
+    sold: !pb.stock,
+    year: new Date().getFullYear(),
+    inStock: pb.stock,
+  };
+}
 
 export default function HomePage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [liveProducts, setLiveProducts] = useState<Product[] | null>(null);
+
+  // Fetch live data from Supabase; fall back to static on failure
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("products")
+          .select("*")
+          .order("created", { ascending: false });
+        const mapped = (data || []).map((r: any) => toLegacyProduct(r));
+        setLiveProducts(mapped);
+      } catch {
+        // DB offline — keep null, fall through to fallbackProducts
+      }
+    })();
+  }, []);
+
+  const products = liveProducts ?? fallbackProducts;
+  const featuredProducts = products.filter((p) => p.featured);
 
   const handleSelect = useCallback((product: Product) => {
     setSelectedProduct(product);

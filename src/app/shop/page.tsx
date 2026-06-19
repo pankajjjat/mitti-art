@@ -6,6 +6,8 @@ import type { Metadata } from "next";
 import { getProducts, getCategories } from "@/lib/pocketbase";
 import ShopContent from "./ShopContent";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Shop — Mitti Art",
   description:
